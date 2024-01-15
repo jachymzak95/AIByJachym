@@ -1,0 +1,31 @@
+import pandas
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+
+#Načtení datasetu emailů a labelů (spam/ham)
+dataraw = pandas.read_csv('spam_or_not_spam.csv')
+
+#konverze dat do stringu
+data = dataraw.dropna()
+data['email'] = data['email'].astype(str)
+
+#train test split
+X_train, X_test, y_train, y_test = train_test_split(data['email'], data['label'], test_size=0.2, random_state=42, stratify=data['label'])
+
+# "Term Frequency-Inverse Document Frequency" vektorizace-konverze dat do čísel pro trénink a testování
+vectorizer = TfidfVectorizer()
+X_train_tfidf = vectorizer.fit_transform(X_train)
+X_test_tfidf = vectorizer.transform(X_test)
+
+#Trénování Naivního Bayese
+gnb = GaussianNB()
+gnb.fit(X_train_tfidf.toarray(), y_train)
+
+#Vytvoření předpokladů (spam/ham) na testovacích x datech
+y_predpoklad = gnb.predict(X_test_tfidf.toarray())
+
+#vyhodnocení a tisk přesnosti
+presnost = accuracy_score(y_test, y_predpoklad)
+print(f"Přesnost: {presnost:.2f}")
